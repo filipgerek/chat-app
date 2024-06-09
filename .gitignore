@@ -1,4 +1,4 @@
-# .gitignore
+# .gitignore files
 .idea/
 cmake-build-debug/
 cmake-build-release/
