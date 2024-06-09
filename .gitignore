@@ -1,0 +1,8 @@
+# .gitignore
+.idea/
+cmake-build-debug/
+cmake-build-release/
+*.o
+*.obj
+*.exe
+*.log
