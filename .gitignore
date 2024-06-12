@@ -6,3 +6,5 @@ cmake-build-release/
 *.obj
 *.exe
 *.log
+client
+server
