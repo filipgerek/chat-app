@@ -46,9 +46,7 @@ int main(){
             buffer[bytes_read] = '\0';
             snprintf(message, sizeof(message), "%s: %s", name, buffer);
             send(socketfd, message, strlen(message), 0);
-            //send(socketfd, buffer, 255, 0);
         }
-
         else if(fds[1].revents & POLLIN) {
             recv(socketfd, buffer, 255, 0);
             printf("%s\n", buffer);

@@ -3,7 +3,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <poll.h>
-#include <unistd.h>
 
 #define MAX_CLIENTS 5
 
@@ -30,8 +29,6 @@ int main(){
                  0
             }
     };
-    //fds[0].fd = socketfd;
-    //fds[0].events = POLLIN;
 
     for(;;){
         char buffer[256];
@@ -59,22 +56,6 @@ int main(){
                     }
 
                 }
-                /*
-                else{
-                    if(fds[0].revents & POLLIN){
-                        read(0, buffer,255);
-                        //recv(fds[i].fd, buffer,255, 0);
-                        for(int j = 1; j < nfds; ++j){
-                            send(fds[j].fd, buffer, 255, 0);
-                        }
-                        //send(fds[i].fd, buffer, 255, 0);
-                    }
-                    else if(fds[i].revents & POLLIN) {
-                        recv(fds[i].fd, buffer, 255, 0);
-                        printf("%s\n", buffer);
-                    }
-                }
-                 */
             }
         }
     }
