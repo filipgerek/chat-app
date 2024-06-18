@@ -48,7 +48,8 @@ int main(){
             send(socketfd, message, strlen(message), 0);
         }
         else if(fds[1].revents & POLLIN) {
-            recv(socketfd, buffer, 255, 0);
+            int bytes_received = recv(socketfd, buffer, 255, 0);
+            buffer[bytes_received] = '\0';
             printf("%s\n", buffer);
         }
     }
