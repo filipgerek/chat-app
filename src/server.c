@@ -2,16 +2,14 @@
 #include <stdlib.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <fcntl.h>
 #include <poll.h>
 #include <unistd.h>
 
-
-//int init_server();
-//int accept_connection(int sockfd);
+#define MAX_CLIENTS 5
 
 int main(){
-    //init_server();
+    int nfds = 1;
+    int timeout = (1 * 60 * 1000);
 
     int socketfd = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -20,82 +18,64 @@ int main(){
     address.sin_port = htons(9999);
     address.sin_addr.s_addr = 0;
 
-    bind(socketfd, (struct socketaddr*)&address, sizeof(address));
+    bind(socketfd, (struct sockaddr*)&address, sizeof(address));
 
-    //listen for incoming messages
     listen(socketfd, 5);
-    printf("Waiting for connection!\n");
+    printf("Waiting for connection...\n");
 
-    //Chat-GPT generated code
-    // Set the socket to non-blocking mode
-    //fcntl(socketfd, F_SETFL, O_NONBLOCK);
-
-    int clientfd = accept(socketfd, 0, 0);
-    printf("Connected!\n");
-
-    struct pollfd fds[2] = {
-        {
-            0,
-            POLLIN,
-            0
-        },
-        {
-            clientfd,
-            POLLIN,
-            0
-        }
+    struct pollfd fds[MAX_CLIENTS + 1] = {
+            {
+                 socketfd,
+                 POLLIN,
+                 0
+            }
     };
+    //fds[0].fd = socketfd;
+    //fds[0].events = POLLIN;
 
     for(;;){
         char buffer[256];
-        poll(fds, 2, 50000);
+        poll(fds, nfds, timeout);
 
-        if(fds[0].revents & POLLIN){
-            read(0, buffer,255);
-            send(clientfd, buffer, 255, 0);
+        int current_size = nfds;
+        for(int i = 0; i < current_size; ++i){
+            if(fds[i].revents == 0) continue;
+            if(fds[i].revents & POLLIN){
+                if(fds[i].fd == socketfd){
+                    int clientfd = accept(socketfd, 0, 0);
+                    printf("Client connected!\n");
+                    fds[nfds].fd = clientfd;
+                    fds[nfds].events = POLLIN;
+                    nfds++;
+                }
+                else {
+                    int bytes_received = recv(fds[i].fd, buffer, 255, 0);
+                    buffer[bytes_received] = '\0';
+                    printf("%s\n", buffer);
+                    for (int j = 1; j < nfds; ++j) {
+                        if (fds[j].fd != fds[i].fd) {
+                            send(fds[j].fd, buffer, bytes_received, 0);
+                        }
+                    }
+
+                }
+                /*
+                else{
+                    if(fds[0].revents & POLLIN){
+                        read(0, buffer,255);
+                        //recv(fds[i].fd, buffer,255, 0);
+                        for(int j = 1; j < nfds; ++j){
+                            send(fds[j].fd, buffer, 255, 0);
+                        }
+                        //send(fds[i].fd, buffer, 255, 0);
+                    }
+                    else if(fds[i].revents & POLLIN) {
+                        recv(fds[i].fd, buffer, 255, 0);
+                        printf("%s\n", buffer);
+                    }
+                }
+                 */
+            }
         }
-        else if(fds[1].revents & POLLIN) {
-            recv(clientfd, buffer, 255, 0);
-            printf("%s\n", buffer);
-        }
     }
 }
-
-/*
-int init_server(){
-    //create socket
-    int socketfd = socket(AF_INET, SOCK_STREAM, 0);
-
-    struct sockaddr_in address;
-    address.sin_family = AF_INET;
-    address.sin_port = htons(9999);
-    address.sin_addr.s_addr = 0;
-
-    bind(socketfd, &address, sizeof(address));
-
-    //listen for incoming messages
-    int listen_value = listen(socketfd, 5);
-    printf("Listen: %d\n", listen_value);
-
-    if(listen_value == -1){
-        printf("Listen was not successful.\n");
-    }
-
-    //Chat-GPT generated code
-    // Set the socket to non-blocking mode
-    fcntl(socketfd, F_SETFL, O_NONBLOCK);
-
-    //int clientfd = accept(socketfd, 0, 0);
-    int clientfd = accept_connection(socketfd);
-    printf("Accept: %d\n", clientfd);
-    if(clientfd == -1){
-        printf("Connection was not accepted.\n");
-    }
-
-    return socketfd;
-}
-
-int accept_connection(int sockfd){
-    return accept(sockfd, 0, 0);
-}
-*/
